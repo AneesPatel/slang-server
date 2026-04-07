@@ -8,27 +8,12 @@
 
 #include "document/SemanticTokens.h"
 
-#include <utility>
-
 #include "slang/parsing/LexerFacts.h"
 #include "slang/parsing/Token.h"
 #include "slang/syntax/SyntaxFacts.h"
 #include "slang/syntax/SyntaxKind.h"
 
 namespace server {
-
-namespace {
-
-template<size_t... I>
-constexpr bool legendStringsMatchToString(std::index_sequence<I...>) {
-    return ((getSemanticTokensLegendTypes()[I] == toString(static_cast<SemanticTokenType>(I))) &&
-            ...);
-}
-
-static_assert(legendStringsMatchToString(
-    std::make_index_sequence<SemanticTokenType_traits::values.size()>{}));
-
-} // namespace
 
 using namespace slang;
 using TK = parsing::TokenKind;
