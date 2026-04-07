@@ -21,6 +21,12 @@ import sys
 from pathlib import Path
 
 
+def gen_config_schema_executable(build_dir: Path) -> Path:
+    """Path to the gen_config_schema binary (``.exe`` on Windows)."""
+    name = "gen_config_schema.exe" if sys.platform == "win32" else "gen_config_schema"
+    return build_dir / "bin" / name
+
+
 def find_repo_root() -> Path:
     """Find the repository root directory."""
     script_dir = Path(__file__).parent.resolve()
@@ -73,7 +79,7 @@ def build_gen_config_schema(build_dir: Path) -> None:
 def generate_schema(build_dir: Path, schema_path: Path) -> None:
     """Generate the JSON schema using gen_config_schema."""
     print("Generating config schema...")
-    gen_config_bin = build_dir / "bin" / "gen_config_schema"
+    gen_config_bin = gen_config_schema_executable(build_dir)
 
     if not gen_config_bin.exists():
         print(f"Error: {gen_config_bin} not found", file=sys.stderr)
@@ -92,7 +98,9 @@ def generate_schema(build_dir: Path, schema_path: Path) -> None:
         sys.exit(1)
 
     schema_path.parent.mkdir(parents=True, exist_ok=True)
-    schema_path.write_text(result.stdout)
+    # LF-only for pre-commit mixed-line-ending / repository consistency
+    schema_text = result.stdout.replace("\r\n", "\n").replace("\r", "\n")
+    schema_path.write_text(schema_text, encoding="utf-8", newline="\n")
 
 
 def type_from_schema(s: dict) -> str:
@@ -147,7 +155,7 @@ def generate_typescript(schema_path: Path, ts_path: Path) -> None:
     """Generate TypeScript interfaces from JSON schema."""
     print("Generating TypeScript types...")
 
-    schema = json.loads(schema_path.read_text())
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
     definitions = schema.get("$defs") or schema.get("definitions") or {}
 
     output = [
@@ -164,7 +172,7 @@ def generate_typescript(schema_path: Path, ts_path: Path) -> None:
         output.append("")
 
     ts_path.parent.mkdir(parents=True, exist_ok=True)
-    ts_path.write_text("\n".join(output))
+    ts_path.write_text("\n".join(output), encoding="utf-8", newline="\n")
 
 
 def main() -> None:
@@ -179,7 +187,7 @@ def main() -> None:
     generate_schema(build_dir, schema_path)
     generate_typescript(schema_path, ts_path)
 
-    print("✓ Config schema and TypeScript types regenerated successfully!")
+    print("Config schema and TypeScript types regenerated successfully.")
     print(f"  - {schema_path.relative_to(repo_root)}")
     print(f"  - {ts_path.relative_to(repo_root)}")
 

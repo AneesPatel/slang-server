@@ -1,0 +1,6 @@
+# Use the CMake-generated compilation database so clangd matches the real build
+# (include paths for tests, Catch2, slang, etc.). Requires:
+#   cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+# Reload the editor / clangd after changing CMake configuration.
+CompileFlags:
+  CompilationDatabase: build
